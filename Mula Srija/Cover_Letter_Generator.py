@@ -4,6 +4,7 @@ import requests
 import PyPDF2
 from docx import Document
 import tempfile
+import io
 import os
 from ocrfile import extract_text_from_image, extract_text_from_scanned_pdf
 
@@ -84,6 +85,66 @@ def extract_resume_content(resume_file):
 
     except Exception as e:
         return f"Error extracting resume: {str(e)}"
+
+
+def create_cover_letter_pdf(cover_letter_text):
+    """Create a PDF file (bytes) from cover letter text."""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.pdfbase.pdfmetrics import stringWidth
+        from reportlab.pdfgen import canvas
+    except ImportError:
+        return None
+
+    buffer = io.BytesIO()
+    page_width, page_height = A4
+    margin_x = 50
+    top_margin = 50
+    bottom_margin = 50
+    line_height = 16
+    max_text_width = page_width - (2 * margin_x)
+
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    pdf.setTitle("Cover Letter")
+    pdf.setFont("Helvetica", 11)
+
+    y = page_height - top_margin
+
+    def draw_wrapped_line(text_line, current_y):
+        words = text_line.split()
+        if not words:
+            return current_y - line_height
+
+        line = ""
+        for word in words:
+            candidate = f"{line} {word}".strip()
+            if stringWidth(candidate, "Helvetica", 11) <= max_text_width:
+                line = candidate
+            else:
+                if current_y <= bottom_margin:
+                    pdf.showPage()
+                    pdf.setFont("Helvetica", 11)
+                    current_y = page_height - top_margin
+                pdf.drawString(margin_x, current_y, line)
+                current_y -= line_height
+                line = word
+
+        if line:
+            if current_y <= bottom_margin:
+                pdf.showPage()
+                pdf.setFont("Helvetica", 11)
+                current_y = page_height - top_margin
+            pdf.drawString(margin_x, current_y, line)
+            current_y -= line_height
+
+        return current_y
+
+    for paragraph in cover_letter_text.splitlines():
+        y = draw_wrapped_line(paragraph, y)
+
+    pdf.save()
+    buffer.seek(0)
+    return buffer.getvalue()
 
 
 
@@ -360,3 +421,18 @@ Return only the final formatted cover letter.
             """,
             unsafe_allow_html=True
         )
+
+        pdf_bytes = create_cover_letter_pdf(ch.get("cover_letter", ""))
+        if pdf_bytes is not None:
+            safe_company = ch.get("company", "company").strip().replace(" ", "_")
+            safe_role = ch.get("role", "role").strip().replace(" ", "_")
+            file_name = f"cover_letter_{safe_company}_{safe_role}.pdf"
+            st.download_button(
+                label="⬇️ Download as PDF",
+                data=pdf_bytes,
+                file_name=file_name,
+                mime="application/pdf",
+                use_container_width=False,
+            )
+        else:
+            st.info("Install reportlab to enable PDF download: pip install reportlab")
