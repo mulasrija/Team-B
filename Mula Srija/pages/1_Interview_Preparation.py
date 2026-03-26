@@ -27,10 +27,18 @@ if "current_quiz" not in st.session_state:
     st.session_state.current_quiz = None
 if "saved" not in st.session_state:
     st.session_state.saved = False
+<<<<<<< HEAD
 
 
 def start_new_quiz():
     """Reset current quiz progress and return to quiz creation view."""
+=======
+if "filename" not in st.session_state:
+    st.session_state.filename = "Untitled Quiz"
+
+
+def start_new_quiz():
+>>>>>>> c76d872 (Updated Mula Srija folder (interview prep + cover letter features))
     st.session_state.questions = []
     st.session_state.current_q = 0
     st.session_state.score = 0
@@ -41,7 +49,10 @@ def start_new_quiz():
 
 
 def delete_current_quiz():
+<<<<<<< HEAD
     """Delete the selected quiz from history and adjust selection."""
+=======
+>>>>>>> c76d872 (Updated Mula Srija folder (interview prep + cover letter features))
     idx = st.session_state.get("current_quiz")
     if idx is None:
         return
@@ -101,6 +112,20 @@ with right:
     )
     st.session_state.question_count = int(question_count)
 
+    # ✅ FIX 1: store filename safely
+    if file:
+        st.session_state.filename = file.name
+
+    question_count = st.number_input(
+        "Number of Questions",
+        min_value=3,
+        max_value=25,
+        value=st.session_state.question_count,
+        step=1,
+        help="Choose how many MCQs to generate dynamically.",
+    )
+    st.session_state.question_count = int(question_count)
+
     def extract_text(file):
         if file.name.endswith(".pdf"):
             pdf = PyPDF2.PdfReader(file)
@@ -120,20 +145,24 @@ with right:
             with st.spinner("Generating questions..."):
 
                 prompt = f"""
+<<<<<<< HEAD
     Generate {st.session_state.question_count} MCQs from the content below.
+=======
+Generate {st.session_state.question_count} MCQs from the content below.
+>>>>>>> c76d872 (Updated Mula Srija folder (interview prep + cover letter features))
 
-    Format STRICTLY like this:
-    Q1: question
-    A) option
-    B) option
-    C) option
-    D) option
-    Answer: A
-    Explanation: explanation
+Format STRICTLY like this:
+Q1: question
+A) option
+B) option
+C) option
+D) option
+Answer: A
+Explanation: explanation
 
-    Content:
-    {text[:3000]}
-    """
+Content:
+{text[:3000]}
+"""
 
                 try:
                     response = requests.post(
@@ -141,29 +170,30 @@ with right:
                         json={"model": "mistral", "prompt": prompt, "stream": False}
                     )
 
-                    data = response.json()["response"]
-                    
                     if response.status_code != 200:
                         st.error("Ollama API failed")
                         st.write(response.text)
                         st.stop()
 
+                    data = response.json()["response"]
+
                     # ---------- PARSE ----------
-                    blocks = data.split("\nQ")  # keep first Q intact
+                    blocks = data.split("\nQ")
                     questions = []
 
                     for b in blocks:
                         b = b.strip()
                         if not b:
                             continue
-                        # Add back Q if missing
                         if not b.startswith("Q"):
                             b = "Q" + b
                         lines = b.split("\n")
+
                         q_text = lines[0].split(":", 1)[1].strip() if ":" in lines[0] else lines[0].strip()
                         options = [l.strip() for l in lines if l.strip().startswith(("A)", "B)", "C)", "D)"))]
                         answer_line = next((l for l in lines if "Answer:" in l or "answer:" in l), "")
                         explanation_line = next((l for l in lines if "Explanation:" in l or "explanation:" in l), "")
+
                         if options and answer_line:
                             questions.append({
                                 "question": q_text,
@@ -173,9 +203,10 @@ with right:
                             })
 
                     if not questions:
-                        st.error("❌ No questions were generated. Check API response or file content.")
+                        st.error("❌ No questions were generated.")
                         st.stop()
 
+<<<<<<< HEAD
                     # Keep the exact number requested when model returns extras.
                     questions = questions[: st.session_state.question_count]
 
@@ -184,6 +215,10 @@ with right:
                             f"Only {len(questions)} questions were generated out of requested {st.session_state.question_count}."
                         )
 
+=======
+                    questions = questions[: st.session_state.question_count]
+
+>>>>>>> c76d872 (Updated Mula Srija folder (interview prep + cover letter features))
                     st.session_state.questions = questions
                     st.session_state.quiz_started = True
                     st.rerun()
@@ -204,7 +239,6 @@ with right:
             st.subheader(f"Question {q_index + 1}")
             st.write(q["question"])
 
-            # 🔥 NO DEFAULT SELECTION
             selected = st.radio(
                 "Choose answer",
                 ["-- Select an option --"] + q["options"],
@@ -238,14 +272,12 @@ with right:
 
             # ---------- SAVE HISTORY ----------
             quiz_data = {
-                "title": f"{file.name} ({datetime.now().strftime('%H:%M')})",
+                # ✅ FIX 2: safe filename usage
+                "title": f"{st.session_state.get('filename', 'Untitled Quiz')} ({datetime.now().strftime('%H:%M')})",
                 "questions": questions,
                 "score": st.session_state.score,
                 "total": len(questions),
             }
-
-            if "saved" not in st.session_state:
-                st.session_state.saved = False
 
             if not st.session_state.saved:
                 st.session_state.quiz_history.append(quiz_data)
