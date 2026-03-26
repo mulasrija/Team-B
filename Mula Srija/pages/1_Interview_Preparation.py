@@ -97,6 +97,7 @@ with right:
         max_value=25,
         value=st.session_state.question_count,
         step=1,
+        key="question_count_input",
         help="Choose how many MCQs to generate dynamically.",
     )
     st.session_state.question_count = int(question_count)
@@ -104,16 +105,6 @@ with right:
     # ✅ FIX 1: store filename safely
     if file:
         st.session_state.filename = file.name
-
-    question_count = st.number_input(
-        "Number of Questions",
-        min_value=3,
-        max_value=25,
-        value=st.session_state.question_count,
-        step=1,
-        help="Choose how many MCQs to generate dynamically.",
-    )
-    st.session_state.question_count = int(question_count)
 
     def extract_text(file):
         if file.name.endswith(".pdf"):
