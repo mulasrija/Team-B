@@ -27,18 +27,11 @@ if "current_quiz" not in st.session_state:
     st.session_state.current_quiz = None
 if "saved" not in st.session_state:
     st.session_state.saved = False
-<<<<<<< HEAD
-
-
-def start_new_quiz():
-    """Reset current quiz progress and return to quiz creation view."""
-=======
 if "filename" not in st.session_state:
     st.session_state.filename = "Untitled Quiz"
 
 
 def start_new_quiz():
->>>>>>> c76d872 (Updated Mula Srija folder (interview prep + cover letter features))
     st.session_state.questions = []
     st.session_state.current_q = 0
     st.session_state.score = 0
@@ -49,10 +42,6 @@ def start_new_quiz():
 
 
 def delete_current_quiz():
-<<<<<<< HEAD
-    """Delete the selected quiz from history and adjust selection."""
-=======
->>>>>>> c76d872 (Updated Mula Srija folder (interview prep + cover letter features))
     idx = st.session_state.get("current_quiz")
     if idx is None:
         return
@@ -145,11 +134,7 @@ with right:
             with st.spinner("Generating questions..."):
 
                 prompt = f"""
-<<<<<<< HEAD
-    Generate {st.session_state.question_count} MCQs from the content below.
-=======
 Generate {st.session_state.question_count} MCQs from the content below.
->>>>>>> c76d872 (Updated Mula Srija folder (interview prep + cover letter features))
 
 Format STRICTLY like this:
 Q1: question
@@ -206,19 +191,8 @@ Content:
                         st.error("❌ No questions were generated.")
                         st.stop()
 
-<<<<<<< HEAD
-                    # Keep the exact number requested when model returns extras.
                     questions = questions[: st.session_state.question_count]
 
-                    if len(questions) < st.session_state.question_count:
-                        st.warning(
-                            f"Only {len(questions)} questions were generated out of requested {st.session_state.question_count}."
-                        )
-
-=======
-                    questions = questions[: st.session_state.question_count]
-
->>>>>>> c76d872 (Updated Mula Srija folder (interview prep + cover letter features))
                     st.session_state.questions = questions
                     st.session_state.quiz_started = True
                     st.rerun()
